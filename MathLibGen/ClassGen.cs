@@ -80,7 +80,7 @@ namespace MathLibGen
         public void StartStruct()
         {
             AddLine("[StructLayout(LayoutKind.Sequential)]");
-            AddLine(String.Format(@"struct {0} : IEquatable<{0}> {{", ClassName()));
+            AddLine(String.Format(@"public struct {0} : IEquatable<{0}> {{", ClassName()));
             PushIndent();
         }
 
@@ -470,8 +470,7 @@ namespace MathLibGen
             PushIndent();
 
             // Getter 
-            AddLine("get {");
-            PushIndent();
+            StartMethod("get");
             AddLine("switch (elmentIndex) {");
 
             for (int i = 0; i < ElementCount - 1; ++i)
@@ -481,12 +480,10 @@ namespace MathLibGen
             AddLine(String.Format("default: return {0};", ElementNames[ElementCount - 1]));
 
             AddLine("}");
-            PopIndent();
-            AddLine("}");
+            EndMethod();
 
             // Setter
-            AddLine("set {");
-            PushIndent();
+            StartMethod("set");
             AddLine("switch (elmentIndex) {");
 
             for (int i = 0; i < ElementCount - 1; ++i)
@@ -496,8 +493,7 @@ namespace MathLibGen
             AddLine(String.Format("default: {0} = value; break;", ElementNames[ElementCount - 1]));
 
             AddLine("}");
-            PopIndent();
-            AddLine("}");
+            EndMethod();
 
             EndMethod();
         }

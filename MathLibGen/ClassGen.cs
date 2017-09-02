@@ -79,6 +79,7 @@ namespace MathLibGen
 
         public void StartStruct()
         {
+            AddLine("[StructLayout(LayoutKind.Sequential)]");
             AddLine(String.Format(@"struct {0} : IEquatable<{0}> {{", ClassName()));
             PushIndent();
         }

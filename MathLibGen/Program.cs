@@ -31,7 +31,7 @@ namespace MathLibGen
                 "float"
             };
 
-            String finalSrc = "using System;\n\nnamespace LiteBox {\n";
+            String finalSrc = "using System;\nusing System.Runtime.CompilerServices;\n\nnamespace LiteBox {\n";
 
             for (int j = 0; j < suffixes.Length; ++j)
             {

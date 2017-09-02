@@ -91,6 +91,7 @@ namespace MathLibGen
 
         public void StartMethod(string methodProto)
         {
+            AddLine("[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             AddLine(methodProto + " {");
             PushIndent();
         }
@@ -464,12 +465,8 @@ namespace MathLibGen
 
         public void AddIndexOp()
         {
-            StartMethod(
-                String.Format(
-                    "public {0} this[int elmentIndex]",
-                    NumType
-                )
-            );
+            AddLine(String.Format("public {0} this[int elmentIndex] {{", NumType));
+            PushIndent();
 
             // Getter 
             AddLine("get {");

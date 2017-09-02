@@ -65,9 +65,33 @@ namespace MathLibGen
             return String.Format(format, objs);
         }
 
+        public void StartNamespace(string nsName)
+        {
+            AddLine("namespace " + nsName + " {");
+            PushIndent();
+        }
+
+        public void EndNamespace()
+        {
+            PopIndent();
+            AddLine("}\n");
+        }
+
+        public void StartStruct()
+        {
+            AddLine(String.Format(@"struct {0} : IEquatable<{0}> {{", ClassName()));
+            PushIndent();
+        }
+
+        public void EndStruct()
+        {
+            PopIndent();
+            AddLine("}\n");
+        }
+
         public void StartMethod(string methodProto)
         {
-            AddLine(methodProto);
+            AddLine(methodProto + " {");
             PushIndent();
         }
 
@@ -75,6 +99,11 @@ namespace MathLibGen
         {
             PopIndent();
             AddLine("}\n");
+        }
+
+        public void AddVars()
+        {
+            PerElement("public {1} {0};");
         }
 
         public void AddLine(string line)
@@ -110,6 +139,55 @@ namespace MathLibGen
             AddLine(ClassName() + " ret;");
             PerElement("ret.{0} = ({1})(l.{0} {2} r.{0});", op);
             AddLine("return ret;");
+
+            EndMethod();
+        }
+
+        public void AddBoolOp(string op, string joinOp)
+        {
+            StartMethod(
+                String.Format(
+                    "public static bool operator {1} ({0} l, {0} r)",
+                    ClassName(),
+                    op
+                )
+            );
+
+            string expr = "return ";
+            for (int i = 0; i < ElementCount; ++i)
+            {
+                if (i > 0)
+                {
+                    expr += " " + joinOp + " ";
+                }
+
+                expr += String.Format("l.{0} {1} r.{0}", ElementNames[0], op);
+            }
+            AddLine(expr + ";");
+
+            EndMethod();
+        }
+
+        public void AddEquals()
+        {
+            StartMethod(
+                String.Format(
+                    "public bool Equals({0} other)",
+                    ClassName()
+                )
+            );
+
+            string expr = "return ";
+            for (int i = 0; i < ElementCount; ++i)
+            {
+                if (i > 0)
+                {
+                    expr += " && ";
+                }
+
+                expr += String.Format("{0} == other.{0}", ElementNames[0]);
+            }
+            AddLine(expr + ";");
 
             EndMethod();
         }
@@ -221,6 +299,209 @@ namespace MathLibGen
 
             EndMethod();
             AddLine("");
+        }
+
+        public void AddScalarOp(string op)
+        {
+            StartMethod(
+                String.Format(
+                    "public static {0} operator {1} ({0} l, {2} r)",
+                    ClassName(),
+                    op,
+                    NumType
+                )
+            );
+
+            AddLine(ClassName() + " ret;");
+            PerElement("ret.{0} = ({1})(l.{0} {2} r);", op);
+            AddLine("return ret;");
+
+            EndMethod();
+
+            AddScalarOpRev(op);
+        }
+
+        private void AddScalarOpRev(string op)
+        {
+            StartMethod(
+                String.Format(
+                    "public static {0} operator {1} ({2} l, {0} r)",
+                    ClassName(),
+                    op,
+                    NumType
+                )
+            );
+
+            AddLine(ClassName() + " ret;");
+            PerElement("ret.{0} = ({1})(l {2} r.{0});", op);
+            AddLine("return ret;");
+
+            EndMethod();
+        }
+
+        public void AddDotProduct()
+        {
+            StartMethod(
+                String.Format(
+                    "public static {1} Dot({0} l, {0} r)",
+                    ClassName(),
+                    NumType
+                )
+            );
+
+            AddLine(NumType + " ret = 0;");
+            PerElement("ret += ({1})(l.{0} * r.{0});");
+            AddLine("return ret;");
+
+            EndMethod();
+
+            // Non static version
+            StartMethod(
+                String.Format(
+                    "public {1} Dot({0} r)",
+                    ClassName(),
+                    NumType
+                )
+            );
+
+            AddLine(NumType + " ret = 0;");
+            PerElement("ret += ({1})({0} * r.{0});");
+            AddLine("return ret;");
+
+            EndMethod();
+        }
+
+        public void AddCrossProduct()
+        {
+            if (ElementCount != 3)
+            {
+                return;
+            }
+
+            StartMethod(
+                String.Format(
+                    "public static {0} Cross({0} u, {0} v)",
+                    ClassName()
+                )
+            );
+
+            AddLine(ClassName() + " ret;");
+            AddLine(String.Format("ret.{3} = ({0})(u.{1} * v.{2} -u.{2} * v.{1} );",
+                NumType, ElementNames[1], ElementNames[2], ElementNames[0]));
+            AddLine(String.Format("ret.{3} = ({0})(u.{1} * v.{2} -u.{2} * v.{1} );",
+                NumType, ElementNames[2], ElementNames[0], ElementNames[1]));
+            AddLine(String.Format("ret.{3} = ({0})(u.{1} * v.{2} -u.{2} * v.{1} );",
+                NumType, ElementNames[0], ElementNames[1], ElementNames[2]));
+            AddLine("return ret;");
+            EndMethod();
+
+            // Non static version
+            StartMethod(
+                String.Format(
+                    "public {0} Cross({0} v)",
+                    ClassName()
+                )
+            );
+
+            AddLine(ClassName() + " ret;");
+            AddLine(String.Format("ret.{3} = ({0})({1} * v.{2} - {2} * v.{1} );",
+                NumType, ElementNames[1], ElementNames[2], ElementNames[0]));
+            AddLine(String.Format("ret.{3} = ({0})({1} * v.{2} - {2} * v.{1} );",
+                NumType, ElementNames[2], ElementNames[0], ElementNames[1]));
+            AddLine(String.Format("ret.{3} = ({0})({1} * v.{2} - {2} * v.{1} );",
+                NumType, ElementNames[0], ElementNames[1], ElementNames[2]));
+            AddLine("return ret;");
+            EndMethod();
+        }
+
+        public void AddMagnitude()
+        {
+            // Length
+            StartMethod(
+                String.Format(
+                    "public {0} Magnitude()",
+                    NumType
+                )
+            );
+            AddLine(String.Format("return ({0})Math.Sqrt(Dot(this, this));", NumType));
+            EndMethod();
+
+            // Length squared
+            StartMethod(
+                String.Format(
+                    "public {0} MagnitudeSqrd()",
+                    NumType
+                )
+            );
+            AddLine("return Dot(this, this);");
+            EndMethod();
+        }
+
+        public void AddNormal()
+        {
+            // Static version
+            StartMethod(
+                String.Format(
+                    "public static {0} Normalize({0} vec)",
+                    ClassName()
+                )
+            );
+
+            AddLine(String.Format("{0} oneOverSqrt = 1.0{1} / vec.Magnitude();", NumType, Suffix));
+            AddLine("return vec * oneOverSqrt;");
+            EndMethod();
+
+            // Non-static version
+            StartMethod(
+                String.Format(
+                    "public {0} Normalized()",
+                    ClassName()
+                )
+            );
+            AddLine("return Normalize(this);");
+            EndMethod();
+        }
+
+        public void AddIndexOp()
+        {
+            StartMethod(
+                String.Format(
+                    "public {0} this[int elmentIndex]",
+                    NumType
+                )
+            );
+
+            // Getter 
+            AddLine("get {");
+            PushIndent();
+            AddLine("switch (elmentIndex) {");
+
+            for (int i = 0; i < ElementCount - 1; ++i)
+            {
+                AddLine(String.Format("case {0}: return {1};", i, ElementNames[i]));
+            }
+            AddLine(String.Format("default: return {0};", ElementNames[ElementCount - 1]));
+
+            AddLine("}");
+            PopIndent();
+            AddLine("}");
+
+            // Setter
+            AddLine("set {");
+            PushIndent();
+            AddLine("switch (elmentIndex) {");
+
+            for (int i = 0; i < ElementCount - 1; ++i)
+            {
+                AddLine(String.Format("case {0}: {1} = value; break;", i, ElementNames[i]));
+            }
+            AddLine(String.Format("default: {0} = value; break;", ElementNames[ElementCount - 1]));
+
+            AddLine("}");
+            PopIndent();
+            AddLine("}");
+
+            EndMethod();
         }
     }
 }

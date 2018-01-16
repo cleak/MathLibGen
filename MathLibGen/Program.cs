@@ -87,6 +87,9 @@ namespace MathLibGen
 
                     gen.AddIndexOp();
 
+                    gen.AddHash();
+                    gen.AddToStr();
+
                     gen.EndStruct();
                     finalSrc += gen.Source;
                 }

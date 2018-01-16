@@ -187,7 +187,7 @@ namespace MathLibGen
                     expr += " && ";
                 }
 
-                expr += String.Format("{0} == other.{0}", ElementNames[0]);
+                expr += String.Format("{0} == other.{0}", ElementNames[i]);
             }
             AddLine(expr + ";");
 
@@ -495,6 +495,36 @@ namespace MathLibGen
             AddLine("}");
             EndMethod();
 
+            EndMethod();
+        }
+
+        public void AddHash() {
+            StartMethod("public override int GetHashCode()");
+            AddLine(String.Format("int hash = {0}.GetHashCode();", ElementNames[0]));
+            AddLine("");
+            for (int i = 1; i < ElementCount; ++i) {
+                int shiftAmount = i * 7;
+
+                AddLine(String.Format("int h{0} = {1}.GetHashCode();", i, ElementNames[i]));
+                AddLine(String.Format("hash ^= (h{0} >> {1}) | (h{0} << {2});", i, 32 - shiftAmount, shiftAmount));
+                AddLine("");
+            }
+            AddLine("return hash;");
+            EndMethod();
+        }
+
+        public void AddToStr() {
+            StartMethod("public override string ToString()");
+            AddLine(String.Format("int hash = {0}.GetHashCode();", ElementNames[0]));
+            AddLine("return \"<\" + ");
+            for (int i = 0; i < ElementCount; ++i) {
+                string line = "    + " + ElementNames[i];
+                if (i < ElementCount - 1) {
+                    line += " + \", \"";
+                }
+                AddLine(line);
+            }
+            AddLine("    + \">\";");
             EndMethod();
         }
     }

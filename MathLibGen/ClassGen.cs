@@ -163,7 +163,7 @@ namespace MathLibGen
                     expr += " " + joinOp + " ";
                 }
 
-                expr += String.Format("l.{0} {1} r.{0}", ElementNames[0], op);
+                expr += String.Format("l.{0} {1} r.{0}", ElementNames[i], op);
             }
             AddLine(expr + ";");
 
@@ -515,7 +515,6 @@ namespace MathLibGen
 
         public void AddToStr() {
             StartMethod("public override string ToString()");
-            AddLine(String.Format("int hash = {0}.GetHashCode();", ElementNames[0]));
             AddLine("return \"<\" + ");
             for (int i = 0; i < ElementCount; ++i) {
                 string line = "    + " + ElementNames[i];
@@ -525,6 +524,28 @@ namespace MathLibGen
                 AddLine(line);
             }
             AddLine("    + \">\";");
+            EndMethod();
+        }
+
+        public void AddPairwiseMethod(string methodName, string delegateMethod) {
+            StartMethod(
+                String.Format(
+                    "public static {0} {1} ({0} l, {0} r)",
+                    ClassName(),
+                    methodName
+                )
+            );
+
+            string expr = string.Format("return new {0}(", ClassName());
+            for (int i = 0; i < ElementCount; ++i) {
+                if (i > 0) {
+                    expr += ", ";
+                }
+
+                expr += String.Format("{1}(l.{0}, r.{0})", ElementNames[i], delegateMethod);
+            }
+            AddLine(expr + ");");
+
             EndMethod();
         }
     }

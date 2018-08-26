@@ -90,6 +90,9 @@ namespace MathLibGen
                     gen.AddHash();
                     gen.AddToStr();
 
+                    gen.AddPairwiseMethod("Min", "System.Math.Min");
+                    gen.AddPairwiseMethod("Max", "System.Math.Max");
+
                     gen.EndStruct();
                     finalSrc += gen.Source;
                 }

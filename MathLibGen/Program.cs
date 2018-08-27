@@ -31,7 +31,7 @@ namespace MathLibGen
                 "float"
             };
 
-            String finalSrc = "using System;\nusing System.Runtime.CompilerServices;\nusing System.Runtime.InteropServices;\n\nnamespace LiteBox.LMath {\n";
+            String finalSrc = "using System;\nusing System.Runtime.CompilerServices;\nusing System.Runtime.InteropServices;\n\nnamespace GeML {\n";
 
             for (int j = 0; j < suffixes.Length; ++j)
             {
@@ -82,6 +82,8 @@ namespace MathLibGen
                     gen.AddBoolOp("<", "&&");
                     gen.AddBoolOp(">=", "&&");
                     gen.AddBoolOp(">", "&&");
+                    gen.AddBoolOp("==", "&&");
+                    gen.AddBoolOp("!=", "&&");
 
                     gen.AddEquals();
 
@@ -92,6 +94,9 @@ namespace MathLibGen
 
                     gen.AddPairwiseMethod("Min", "System.Math.Min");
                     gen.AddPairwiseMethod("Max", "System.Math.Max");
+
+                    gen.AddConstant("Zero", "0");
+                    gen.AddConstant("One", "1");
 
                     gen.EndStruct();
                     finalSrc += gen.Source;

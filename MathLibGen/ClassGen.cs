@@ -172,6 +172,7 @@ namespace MathLibGen
 
         public void AddEquals()
         {
+            // Type specific equals
             StartMethod(
                 String.Format(
                     "public bool Equals({0} other)",
@@ -190,6 +191,23 @@ namespace MathLibGen
                 expr += String.Format("{0} == other.{0}", ElementNames[i]);
             }
             AddLine(expr + ";");
+
+            EndMethod();
+
+            // Overridden object equals
+            StartMethod(
+                string.Format(
+                    "public override bool Equals(object other)",
+                    ClassName()
+                )
+            );
+
+            AddLine(string.Format("if (other is {0}) {{", ClassName()));
+            PushIndent();
+            AddLine(string.Format("return Equals(({0})other);", ClassName()));
+            PopIndent();
+            AddLine("}\n");
+            AddLine("return base.Equals(other);");
 
             EndMethod();
         }
@@ -525,6 +543,25 @@ namespace MathLibGen
             }
             AddLine("    + \">\";");
             EndMethod();
+        }
+
+        /// Adds a static const version of the class (e.g. Zero and One).
+        public void AddConstant(string fieldName, string val) {
+            string expr = string.Format(
+                "public static readonly {0} {1} = new {0}(",
+                ClassName(),
+                fieldName
+            );
+
+            for (int i = 0; i < this.ElementCount; ++i) {
+                if (i > 0) {
+                    expr += ", ";
+                }
+                expr += val;
+            }
+            expr += ");";
+            AddLine(expr);
+            AddLine("");
         }
 
         public void AddPairwiseMethod(string methodName, string delegateMethod) {
